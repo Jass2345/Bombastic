@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +25,8 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // onBackgroundMessage는 runApp 이전에 등록해야 함 (FCM 요구사항)
   FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
-  await FcmService.initialize();
 
   FlutterNativeSplash.remove();
 
@@ -33,6 +35,9 @@ Future<void> main() async {
       child: BombasticApp(),
     ),
   );
+
+  // 채널 등록·권한 요청은 첫 프레임을 막지 않도록 runApp 이후 실행
+  unawaited(FcmService.initialize());
 }
 
 class BombasticApp extends ConsumerWidget {
