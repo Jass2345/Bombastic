@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../data/firebase/firebase_providers.dart';
 import '../../../data/models/group_model.dart';
+import '../../admin/widgets/admin_cli_dialog.dart';
 import '../../group/controllers/group_controller.dart';
 import '../../mission/pages/mission_page.dart';
 import '../../shop/pages/shop_page.dart';
@@ -196,7 +197,18 @@ class _PlayingTabViewState extends ConsumerState<_PlayingTabView> {
         'Bombastic';
 
     return Scaffold(
-      appBar: AppBar(title: Text('💣 $groupName')),
+      appBar: AppBar(
+        title: Text('💣 $groupName'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.developer_mode),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => AdminCliDialog(groupId: widget.groupId),
+            ),
+          ),
+        ],
+      ),
       body: IndexedStack(
         index: _tabIndex,
         children: [
