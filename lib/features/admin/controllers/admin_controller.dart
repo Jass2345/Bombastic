@@ -20,7 +20,7 @@ class AdminController extends _$AdminController {
     if (uid == null) throw Exception('로그인이 필요합니다.');
 
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final firestore = ref.read(firestoreProvider);
       
       final parts = command.trim().split(' ');
@@ -30,8 +30,14 @@ class AdminController extends _$AdminController {
       switch (cmd) {
         case '/money':
           final amount = parts.length > 1 ? int.tryParse(parts[1]) ?? 10000 : 10000;
-          await firestore.collection('users').doc(uid).update({
-            'groupCurrencies.$groupId': FieldValue.increment(amount),
+          final userRef = firestore.collection('users').doc(uid);
+          await firestore.runTransaction((tx) async {
+            final snap = await tx.get(userRef);
+            final currencies = Map<String, dynamic>.from(
+              snap.data()?['groupCurrencies'] as Map<String, dynamic>? ?? {},
+            );
+            final current = (currencies[groupId] as num?)?.toInt() ?? 0;
+            tx.update(userRef, {'groupCurrencies.$groupId': current + amount});
           });
           break;
           
@@ -86,5 +92,6 @@ class AdminController extends _$AdminController {
           throw Exception('알 수 없는 명령어: $cmd');
       }
     });
+    if (ref.mounted) state = next;
   }
 }

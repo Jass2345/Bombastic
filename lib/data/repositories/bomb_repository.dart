@@ -70,6 +70,17 @@ class BombRepository {
     });
   }
 
+  /// 폭탄 전달 로그 실시간 스트림 (최신순)
+  Stream<List<Map<String, dynamic>>> watchPassLogs(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('passes')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => d.data()).toList());
+  }
+
   /// uid별 전달 횟수 집계 (결산용)
   Future<Map<String, int>> fetchPassCounts(String groupId) async {
     final snap = await _firestore
