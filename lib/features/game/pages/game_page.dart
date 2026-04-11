@@ -275,14 +275,17 @@ class _GameBody extends ConsumerWidget {
                     color: isMyTurn ? Colors.red : Colors.grey,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    isMyTurn
-                        ? '내가 폭탄을 보유 중!'
-                        : '현재 폭탄 보유: $holderNickname',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: isMyTurn ? Colors.red : null,
+                  Flexible(
+                    child: Text(
+                      isMyTurn
+                          ? '내가 폭탄을 보유 중!'
+                          : '현재 폭탄 보유: $holderNickname',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: isMyTurn ? Colors.red : null,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
