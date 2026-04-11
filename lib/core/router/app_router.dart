@@ -8,9 +8,7 @@ import '../../features/game/pages/game_page.dart';
 import '../../features/group/pages/group_join_page.dart';
 import '../../features/group/pages/group_create_page.dart';
 import '../../features/group/pages/nickname_input_page.dart';
-import '../../features/mission/pages/mission_page.dart';
 import '../../features/result/pages/result_page.dart';
-import '../../features/shop/pages/shop_page.dart';
 
 part 'app_router.g.dart';
 
@@ -22,7 +20,6 @@ abstract final class AppRoutes {
   static const game = '/game';       // /game/:groupId
   static const nickname = '/group';  // /group/:groupId/nickname
   static const result = '/result';   // /result/:groupId
-  // 상점·미션은 게임 내부에서만 접근 가능: /game/:groupId/shop, /game/:groupId/mission
 }
 
 @riverpod
@@ -58,20 +55,6 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) => GamePage(
           groupId: state.pathParameters['groupId']!,
         ),
-        routes: [
-          GoRoute(
-            path: 'shop',
-            builder: (context, state) => ShopPage(
-              groupId: state.pathParameters['groupId']!,
-            ),
-          ),
-          GoRoute(
-            path: 'mission',
-            builder: (context, state) => MissionPage(
-              groupId: state.pathParameters['groupId']!,
-            ),
-          ),
-        ],
       ),
       GoRoute(
         path: '${AppRoutes.result}/:groupId',

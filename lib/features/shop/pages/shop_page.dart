@@ -6,8 +6,9 @@ import '../../../data/firebase/firebase_providers.dart';
 import '../../../data/models/shop_item_model.dart';
 import '../controllers/shop_controller.dart';
 
-class ShopPage extends ConsumerWidget {
-  const ShopPage({super.key, required this.groupId});
+/// 탭에서 직접 사용하는 상점 body 위젯
+class ShopBody extends ConsumerWidget {
+  const ShopBody({super.key, required this.groupId});
 
   final String groupId;
 
@@ -17,20 +18,7 @@ class ShopPage extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).asData?.value;
     final currency = user?.groupCurrencies[groupId] ?? 0;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('상점'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Chip(
-              avatar: const Icon(Icons.monetization_on, size: 18),
-              label: Text('$currency'),
-            ),
-          ),
-        ],
-      ),
-      body: itemsAsync.when(
+    return itemsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('오류: $e')),
         data: (items) {
@@ -67,8 +55,7 @@ class ShopPage extends ConsumerWidget {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }
 
