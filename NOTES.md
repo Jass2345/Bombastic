@@ -87,7 +87,7 @@ AuthGate
 - [x] `currentUserProvider` 추가 (`firebase_providers.dart`, 현재 유저 Firestore 실시간 스트림)
 - [x] 그룹 생성자 닉네임 입력 — 그룹 생성 후 닉네임 입력 화면으로 이동하도록 변경
 - [ ] 그룹 내 설정에서 닉네임 변경 기능 구현
-- [ ] 중복 참여 방지 — `joinGroup` 시 이미 멤버인지 확인 안 함 (`memberUids` 중복 추가 가능)
+- [x] 중복 참여 방지 — `joinGroup`에서 중복 멤버/정원 초과를 트랜잭션으로 검증
 - [ ] 참여코드 생성 클라이언트 유지 (중복 문제 발생 시 서버로 이전)
 
 ### 백엔드 · 서버
@@ -151,7 +151,7 @@ AuthGate
 
 | 파일 | 문제 | 수정 방향 |
 |------|------|-----------|
-| `group_repository.dart:59` | `joinGroup` 시 이미 멤버인지 확인 안 함 → `memberUids` 중복 추가 가능 | `arrayUnion` 전 `memberUids.contains(uid)` 체크 또는 Functions로 이전 |
+| `group_repository.dart:59` | 해결됨: `joinGroup`이 트랜잭션에서 중복 멤버 및 정원 초과를 검증하도록 수정됨 | 후속: Functions 경유 가입으로 완전 서버 권한화 검토 |
 | `group_controller.dart:28` | 해결됨: 그룹 생성 후 닉네임 입력 화면(`/group/:groupId/nickname`)으로 이동하도록 수정됨 | 후속: 그룹 내 설정에서 닉네임 변경 기능 추가 |
 | `groupTriggers.ts` (`startGame`) | 폭탄 만료 시간 `24 * 60 * 60 * 1000` 하드코딩 — `AppConstants.defaultBombDurationSeconds`(86400)와 별도 관리됨 | Functions 환경변수 또는 Firestore config 문서로 단일 관리 |
 | `bombExpireScheduler.ts` (`onBombExploded`) | 폭발 즉시 `finished` 처리 — 다음 라운드 로직 없음. 주석("다음 라운드 시작")과 실제 동작 불일치 | 게임 설계 확정 후 라운드 지속 vs 즉시 종료 방향 결정 필요 |
