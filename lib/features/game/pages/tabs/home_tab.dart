@@ -47,7 +47,7 @@ class _GameBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final timer = ref.watch(bombTimerProvider(groupId));
+    final timer = ref.watch(bombTimerProvider(groupId)).asData?.value ?? '00:00:00';
     final isMyTurn = ref.watch(isMyTurnProvider(groupId));
     final uid = ref.watch(currentUidProvider);
     final group = ref.watch(watchGroupProvider(groupId)).asData?.value;

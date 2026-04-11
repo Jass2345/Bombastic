@@ -5,6 +5,7 @@ admin.initializeApp();
 
 // 각 도메인별 함수 export
 export * from './bomb/bombExpireScheduler';
+export * from './bomb/passBombCallable';
 export * from './group/groupTriggers';
 export * from './notification/fcmSender';
 export * from './items/itemController';

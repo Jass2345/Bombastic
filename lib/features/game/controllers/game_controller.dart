@@ -5,8 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/firebase/firebase_providers.dart';
 import '../../../data/models/bomb_model.dart';
-import '../../../data/repositories/bomb_repository.dart';
-import '../../../data/repositories/group_repository.dart';
 
 part 'game_controller.g.dart';
 
@@ -113,42 +111,17 @@ class GameController extends _$GameController {
     });
   }
 
-  /// 폭탄을 다음 사람에게 전달
+  /// 폭탄을 다음 사람에게 전달 (Cloud Function 경유)
+  /// expiresAt은 서버에서 계산되므로 기기 클럭 차이에 의한 타이머 불일치가 없다.
   Future<void> passBomb({
     required String groupId,
     required String bombId,
   }) async {
     await _runGuarded(() async {
-      final groupRepository = ref.read(groupRepositoryProvider);
-      final bombRepository = ref.read(bombRepositoryProvider);
-      final uid = ref.read(currentUidProvider);
-      if (uid == null) throw Exception('로그인이 필요합니다.');
-
-      final group = await groupRepository.watchGroup(groupId).first;
-      if (group == null) throw Exception('그룹을 찾을 수 없습니다.');
-
-      final members = group.memberUids;
-      final currentIndex = members.indexOf(uid);
-      if (currentIndex == -1) throw Exception('그룹 멤버가 아닙니다.');
-
-      final nextIndex = (currentIndex + 1) % members.length;
-      final nextUid = members[nextIndex];
-
-      await bombRepository.passBomb(
-            groupId: groupId,
-            bombId: bombId,
-            nextHolderUid: nextUid,
-            expiresAt: DateTime.now().add(
-              const Duration(seconds: AppConstants.defaultBombDurationSeconds),
-            ),
-          );
-
-      // 전달 로그 기록 (passCount 집계용)
-      await bombRepository.logPass(
-            groupId: groupId,
-            fromUid: uid,
-            toUid: nextUid,
-          );
+      await callHttpsCallableWithRegionFallback(
+        functionName: 'passBomb',
+        data: {'groupId': groupId, 'bombId': bombId},
+      );
     });
   }
 
