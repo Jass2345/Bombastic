@@ -8,6 +8,7 @@ import '../../../data/models/group_model.dart';
 import '../../../data/models/shop_item_model.dart';
 import '../../group/controllers/group_controller.dart';
 import '../../shop/controllers/shop_controller.dart';
+import '../../admin/widgets/admin_cli_dialog.dart';
 import '../controllers/game_controller.dart';
 import '../controllers/timer_controller.dart';
 
@@ -193,6 +194,13 @@ class _PlayingView extends ConsumerWidget {
       appBar: AppBar(
         title: Text('💣 $groupName'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.developer_mode),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => AdminCliDialog(groupId: groupId),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.shopping_bag),
             onPressed: () =>
