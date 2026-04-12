@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/firebase/firebase_providers.dart';
 import '../../../data/models/shop_item_model.dart';
+import '../../../widgets/item_icon.dart';
 import '../controllers/shop_controller.dart';
 
 /// 탭에서 직접 사용하는 상점 body 위젯
@@ -25,11 +26,53 @@ class ShopBody extends ConsumerWidget {
             ..sort((a, b) => b.probability.compareTo(a.probability));
           final totalWeight = pool.fold(0, (sum, i) => sum + i.probability);
 
+          final ownedItemIds = ref
+                  .watch(currentUserProvider)
+                  .asData
+                  ?.value
+                  ?.groupOwnedItemIds[groupId] ??
+              const <String>[];
+          final ownedItems = items
+              .where((item) => ownedItemIds.contains(item.id))
+              .toList();
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // 내 인벤토리
+                if (ownedItems.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.backpack_rounded,
+                          size: 18, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      const Text(
+                        '내 인벤토리',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${ownedItems.length}개',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: ownedItems
+                        .map((item) => _InventoryChip(item: item))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                ],
                 _RandomBoxCard(currency: currency, groupId: groupId),
                 const SizedBox(height: 32),
                 const Text(
@@ -244,6 +287,35 @@ class _ItemPoolTile extends StatelessWidget {
     if (percent >= 15) return Colors.blue;
     if (percent >= 7) return Colors.orange;
     return Colors.red;
+  }
+}
+
+class _InventoryChip extends StatelessWidget {
+  const _InventoryChip({required this.item});
+
+  final ShopItemModel item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ItemIcon(itemType: item.id, size: 28),
+          const SizedBox(width: 8),
+          Text(
+            item.name,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
   }
 }
 

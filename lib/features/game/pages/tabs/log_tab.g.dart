@@ -85,3 +85,80 @@ final class PassLogsFamily extends $Family
   @override
   String toString() => r'passLogsProvider';
 }
+
+@ProviderFor(itemUsageLogs)
+final itemUsageLogsProvider = ItemUsageLogsFamily._();
+
+final class ItemUsageLogsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Map<String, dynamic>>>,
+          List<Map<String, dynamic>>,
+          Stream<List<Map<String, dynamic>>>
+        >
+    with
+        $FutureModifier<List<Map<String, dynamic>>>,
+        $StreamProvider<List<Map<String, dynamic>>> {
+  ItemUsageLogsProvider._({
+    required ItemUsageLogsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'itemUsageLogsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$itemUsageLogsHash();
+
+  @override
+  String toString() {
+    return r'itemUsageLogsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Map<String, dynamic>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Map<String, dynamic>>> create(Ref ref) {
+    final argument = this.argument as String;
+    return itemUsageLogs(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ItemUsageLogsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$itemUsageLogsHash() => r'00b91f5ea52627eff037ab49bd5b8b558492ccd7';
+
+final class ItemUsageLogsFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<Map<String, dynamic>>>, String> {
+  ItemUsageLogsFamily._()
+    : super(
+        retry: null,
+        name: r'itemUsageLogsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  ItemUsageLogsProvider call(String groupId) =>
+      ItemUsageLogsProvider._(argument: groupId, from: this);
+
+  @override
+  String toString() => r'itemUsageLogsProvider';
+}

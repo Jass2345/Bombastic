@@ -84,8 +84,13 @@ export const useItem = functions.https.onCall(async (data, context) => {
         const j = Math.floor(Math.random() * (i + 1));
         [others[i], others[j]] = [others[j], others[i]];
       }
-      others.splice(myIndex, 0, uid);
-      batch.update(groupRef, { memberUids: others });
+      // 원래 인덱스에 정확히 삽입: before + me + after
+      const newOrder = [
+        ...others.slice(0, myIndex),
+        uid,
+        ...others.slice(myIndex),
+      ];
+      batch.update(groupRef, { memberUids: newOrder });
       break;
     }
 
@@ -97,7 +102,12 @@ export const useItem = functions.https.onCall(async (data, context) => {
 
     case 'shrinkDuration': {
       // 모든 활성 폭탄 남은 시간 50% 단축
-      if (!activeBombDoc) break;
+      if (!activeBombDoc) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          '활성 폭탄이 없어 사용할 수 없습니다.',
+        );
+      }
       const expiresAt = (activeBomb!.expiresAt as admin.firestore.Timestamp).toDate();
       const now = new Date();
       const remaining = expiresAt.getTime() - now.getTime();

@@ -46,6 +46,16 @@ class GamePage extends ConsumerWidget {
   }
 }
 
+String _itemUsageMessage(String nickname, String itemType) {
+  return switch (itemType) {
+    'swapOrder' => '$nickname님이 순서를 섞었습니다! 🔀',
+    'reverseDirection' => '$nickname님이 전달 방향을 반전했습니다! ↩️',
+    'shrinkDuration' => '$nickname님이 타이머를 단축했습니다! ⏱️',
+    'adjustGameDays' => '$nickname님이 게임 기간을 조정했습니다! 📅',
+    _ => '$nickname님이 아이템을 사용했습니다!',
+  };
+}
+
 // ── Waiting 상태 UI ──────────────────────────────────────────
 
 List<Widget> _buildGlobalActions(String groupId) {
@@ -194,8 +204,40 @@ class _PlayingTabViewState extends ConsumerState<_PlayingTabView> {
     NavigationDestination(icon: Icon(Icons.settings), label: '설정'),
   ];
 
+  Map<String, dynamic>? _lastShownUsage;
+
   @override
   Widget build(BuildContext context) {
+    // 아이템 사용 알림 리스너
+    ref.listen(
+      latestItemUsageProvider(widget.groupId),
+      (prev, next) {
+        final usage = next.asData?.value;
+        if (usage == null) return;
+        // 같은 이벤트 중복 방지
+        if (_lastShownUsage != null &&
+            _lastShownUsage!['usedAt'] == usage['usedAt']) return;
+        _lastShownUsage = usage;
+
+        final uid = ref.read(currentUidProvider);
+        final usedByUid = usage['uid'] as String? ?? '';
+        if (usedByUid == uid) return; // 본인 사용은 스킵
+
+        final group = ref.read(watchGroupProvider(widget.groupId)).asData?.value;
+        final nick = group?.memberNicknames[usedByUid] ?? usedByUid;
+        final itemType = usage['itemType'] as String? ?? '';
+        final message = _itemUsageMessage(nick, itemType);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+
     final groupName = ref
             .watch(watchGroupProvider(widget.groupId))
             .asData

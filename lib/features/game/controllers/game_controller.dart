@@ -9,6 +9,21 @@ import '../../../data/repositories/bomb_repository.dart';
 
 part 'game_controller.g.dart';
 
+/// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+@riverpod
+Stream<Map<String, dynamic>?> latestItemUsage(Ref ref, String groupId) {
+  if (groupId.isEmpty) return const Stream.empty();
+  return ref
+      .watch(firestoreProvider)
+      .collection('groups')
+      .doc(groupId)
+      .collection('itemUsages')
+      .orderBy('usedAt', descending: true)
+      .limit(1)
+      .snapshots()
+      .map((snap) => snap.docs.isEmpty ? null : snap.docs.first.data());
+}
+
 /// 현재 활성 폭탄 실시간 스트림
 @riverpod
 Stream<BombModel?> activeBomb(Ref ref, String groupId) {
