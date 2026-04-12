@@ -8,6 +8,92 @@ part of 'game_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+
+@ProviderFor(latestItemUsage)
+final latestItemUsageProvider = LatestItemUsageFamily._();
+
+/// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+
+final class LatestItemUsageProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, dynamic>?>,
+          Map<String, dynamic>?,
+          Stream<Map<String, dynamic>?>
+        >
+    with
+        $FutureModifier<Map<String, dynamic>?>,
+        $StreamProvider<Map<String, dynamic>?> {
+  /// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+  LatestItemUsageProvider._({
+    required LatestItemUsageFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'latestItemUsageProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$latestItemUsageHash();
+
+  @override
+  String toString() {
+    return r'latestItemUsageProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<Map<String, dynamic>?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<Map<String, dynamic>?> create(Ref ref) {
+    final argument = this.argument as String;
+    return latestItemUsage(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LatestItemUsageProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$latestItemUsageHash() => r'd74db47b17b391b2f0d4b4ea5cd07412cb7439fc';
+
+/// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+
+final class LatestItemUsageFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<Map<String, dynamic>?>, String> {
+  LatestItemUsageFamily._()
+    : super(
+        retry: null,
+        name: r'latestItemUsageProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 최근 아이템 사용 이벤트 실시간 스트림 (최신 1건)
+
+  LatestItemUsageProvider call(String groupId) =>
+      LatestItemUsageProvider._(argument: groupId, from: this);
+
+  @override
+  String toString() => r'latestItemUsageProvider';
+}
+
 /// 현재 활성 폭탄 실시간 스트림
 
 @ProviderFor(activeBomb)

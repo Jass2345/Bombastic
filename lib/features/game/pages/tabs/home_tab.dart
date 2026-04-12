@@ -34,7 +34,7 @@ class HomeTab extends ConsumerWidget {
   }
 }
 
-class _GameBody extends ConsumerWidget {
+class _GameBody extends ConsumerStatefulWidget {
   const _GameBody({
     required this.groupId,
     required this.bombId,
@@ -46,11 +46,56 @@ class _GameBody extends ConsumerWidget {
   final String holderUid;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_GameBody> createState() => _GameBodyState();
+}
+
+class _GameBodyState extends ConsumerState<_GameBody>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _flashController;
+  late final Animation<Color?> _flashAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _flashController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _flashAnimation = ColorTween(
+      begin: Colors.orange,
+      end: Colors.transparent,
+    ).animate(CurvedAnimation(
+      parent: _flashController,
+      curve: Curves.easeOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _flashController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // shrinkDuration 시 타이머 플래시 효과
+    ref.listen(
+      latestItemUsageProvider(widget.groupId),
+      (prev, next) {
+        final usage = next.asData?.value;
+        if (usage == null) return;
+        if (usage['itemType'] == 'shrinkDuration') {
+          _flashController.forward(from: 0);
+        }
+      },
+    );
+
+    final groupId = widget.groupId;
     final timer = ref.watch(bombTimerProvider(groupId));
     final isMyTurn = ref.watch(isMyTurnProvider(groupId));
     final uid = ref.watch(currentUidProvider);
-    final group = ref.watch(watchGroupProvider(groupId)).asData?.value;
+    final group =
+        ref.watch(watchGroupProvider(groupId)).asData?.value;
     final ownedItemIds = ref
             .watch(currentUserProvider)
             .asData
@@ -60,7 +105,8 @@ class _GameBody extends ConsumerWidget {
     final shopItems =
         ref.watch(shopItemsProvider).asData?.value ?? const <ShopItemModel>[];
 
-    final holderNickname = group?.memberNicknames[holderUid] ?? holderUid;
+    final holderNickname =
+        group?.memberNicknames[widget.holderUid] ?? widget.holderUid;
     final memberUids = group?.memberUids ?? const <String>[];
 
     final usableItems = shopItems
@@ -107,16 +153,25 @@ class _GameBody extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // 타이머
-          Center(
-            child: Text(
-              timer,
-              style: TextStyle(
-                fontSize: 64,
-                fontWeight: FontWeight.bold,
-                color: isMyTurn ? Colors.red : Colors.grey,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+          AnimatedBuilder(
+            animation: _flashAnimation,
+            builder: (context, child) {
+              final flashColor = _flashAnimation.value;
+              return Center(
+                child: Text(
+                  timer,
+                  style: TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.bold,
+                    color: flashColor != Colors.transparent &&
+                            flashColor != null
+                        ? flashColor
+                        : (isMyTurn ? Colors.red : Colors.grey),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 4),
           Center(
@@ -152,7 +207,7 @@ class _GameBody extends ConsumerWidget {
                 itemBuilder: (_, i) {
                   final mUid = memberUids[i];
                   final nick = group?.memberNicknames[mUid] ?? '?';
-                  final isHolder = mUid == holderUid;
+                  final isHolder = mUid == widget.holderUid;
                   final isMe = mUid == uid;
                   return Container(
                     padding: const EdgeInsets.symmetric(
@@ -192,7 +247,7 @@ class _GameBody extends ConsumerWidget {
             onPressed: isMyTurn
                 ? () => ref
                     .read(gameControllerProvider.notifier)
-                    .passBomb(groupId: groupId, bombId: bombId)
+                    .passBomb(groupId: groupId, bombId: widget.bombId)
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -260,55 +315,101 @@ class _ItemCard extends ConsumerWidget {
   final ShopItemModel item;
   final String groupId;
 
+  Future<void> _onItemTap(BuildContext context, WidgetRef ref) async {
+    // adjustGameDays: ±1일 선택 다이얼로그
+    if (item.type == ItemType.adjustGameDays) {
+      final days = await showDialog<int>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              ItemIcon(itemType: item.id, size: 36),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('기간 조정')),
+            ],
+          ),
+          content: const Text('게임 기간을 어떻게 조정할까요?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('취소'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, -1),
+              child: const Text('-1일'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, 1),
+              child: const Text('+1일'),
+            ),
+          ],
+        ),
+      );
+      if (days == null || !context.mounted) return;
+      await ref
+          .read(gameControllerProvider.notifier)
+          .useItem(groupId: groupId, itemId: item.id, days: days);
+      if (!context.mounted) return;
+      final state = ref.read(gameControllerProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            state.hasError
+                ? '사용 실패: ${state.error}'
+                : '게임 기간 ${days > 0 ? "+$days" : "$days"}일 조정 완료!',
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 일반 아이템: 확인 다이얼로그
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            ItemIcon(itemType: item.id, size: 36),
+            const SizedBox(width: 12),
+            Expanded(child: Text(item.name)),
+          ],
+        ),
+        content: Text(item.description),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('사용'),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !context.mounted) return;
+    await ref
+        .read(gameControllerProvider.notifier)
+        .useItem(groupId: groupId, itemId: item.id);
+    if (!context.mounted) return;
+    final state = ref.read(gameControllerProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          state.hasError
+              ? '사용 실패: ${state.error}'
+              : '${item.name} 사용 완료!',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(gameControllerProvider).isLoading;
 
     return GestureDetector(
-      onTap: isLoading
-          ? null
-          : () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: Row(
-                    children: [
-                      ItemIcon(itemType: item.id, size: 36),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(item.name)),
-                    ],
-                  ),
-                  content: Text(item.description),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('취소'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('사용'),
-                    ),
-                  ],
-                ),
-              );
-              if ((confirmed ?? false) && context.mounted) {
-                await ref
-                    .read(gameControllerProvider.notifier)
-                    .useItem(groupId: groupId, itemId: item.id);
-                if (context.mounted) {
-                  final state = ref.read(gameControllerProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.hasError
-                            ? '사용 실패: ${state.error}'
-                            : '${item.name} 사용 완료!',
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
+      onTap: isLoading ? null : () => _onItemTap(context, ref),
       child: Container(
         width: 72,
         padding: const EdgeInsets.symmetric(vertical: 8),
