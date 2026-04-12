@@ -1,5 +1,92 @@
 # 📋 Bombastic 개발 노트
 
+---
+
+## ⚙️ 환경 설정 및 실행 방법
+
+### 1. 사전 요구사항
+
+- Flutter SDK `>=3.8.0`
+- Firebase CLI (`npm install -g firebase-tools`)
+- Node.js 20 이상 (Cloud Functions 빌드용)
+
+### 2. 저장소 클론 & 의존성 설치
+
+```bash
+git clone <repo-url>
+cd bombastic
+
+# 의존성 설치 + freezed/riverpod 코드 자동 생성
+bash setup.sh
+```
+
+> `setup.sh`가 없으면 아래 명령을 순서대로 실행하세요.
+> ```bash
+> flutter pub get
+> dart run build_runner build --delete-conflicting-outputs
+> ```
+
+### 3. Firebase 연결 (최초 1회)
+
+```bash
+# FlutterFire CLI 설치
+dart pub global activate flutterfire_cli
+
+# Firebase 프로젝트와 앱 연결 (lib/firebase_options.dart 자동 생성)
+flutterfire configure --project=likelion-holycow
+```
+
+> `lib/firebase_options.dart`는 `.gitignore`에 포함되어 있으므로 **팀원 각자 로컬에서 생성**해야 합니다.
+
+### 4. 플랫폼 설정 파일 배치
+
+Firebase Console → 프로젝트 설정에서 각 파일을 다운로드해 아래 경로에 배치하세요.
+
+| 파일 | 위치 |
+|------|------|
+| `google-services.json` | `android/app/` |
+| `GoogleService-Info.plist` | `ios/Runner/` |
+
+### 5. 앱 실행
+
+```bash
+flutter run
+```
+
+### 6. Cloud Functions 배포 (서버 로직 변경 시)
+
+```bash
+cd functions
+npm install
+npm run build      # TypeScript 컴파일
+npm run deploy     # Firebase에 배포
+```
+
+로컬 에뮬레이터로 테스트하려면:
+```bash
+npm run serve
+```
+
+### 7. 코드 생성 (모델·provider 변경 시)
+
+```bash
+# 1회 실행
+dart run build_runner build --delete-conflicting-outputs
+
+# 개발 중 watch 모드
+dart run build_runner watch --delete-conflicting-outputs
+```
+
+### 8. 기타 유용한 명령
+
+```bash
+flutter analyze          # 정적 분석
+flutter test             # 테스트 실행
+firebase deploy --only firestore:rules   # Firestore 보안 규칙만 배포
+```
+
+---
+
 > 팀원 공용 메모판. 결정사항·방향성·논의 내용을 여기에 자유롭게 기록하세요.
 > 커밋 메시지보다 덜 형식적으로, 이슈보다 더 빠르게.
 
