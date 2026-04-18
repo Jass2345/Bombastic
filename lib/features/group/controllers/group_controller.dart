@@ -95,15 +95,17 @@ class GroupController extends _$GroupController {
         throw Exception('그룹이 가득 찼습니다.');
       }
       await repo.joinGroup(groupId: group.id, uid: uid);
+      // 닉네임을 명시적으로 빈 문자열로 초기화 — 이후 nickname_input_page에서
+      // 사용자가 직접 설정해야 게임 시작이 활성화된다 (닉네임 미설정 감지용)
       await ref.read(userRepositoryProvider).addGroupMembership(
             uid: uid,
             groupId: group.id,
-            nickname: '익명',
+            nickname: '',
           );
       await repo.updateMemberNickname(
             groupId: group.id,
             uid: uid,
-            nickname: '익명',
+            nickname: '',
           );
       groupId = group.id;
     });

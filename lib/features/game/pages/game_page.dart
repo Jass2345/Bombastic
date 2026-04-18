@@ -219,14 +219,16 @@ class _WaitingView extends ConsumerWidget {
                   itemCount: group.memberUids.length,
                   itemBuilder: (_, i) {
                     final memberUid = group.memberUids[i];
-                    final nickname =
-                        group.memberNicknames[memberUid] ?? '알 수 없음';
+                    final rawNickname = group.memberNicknames[memberUid];
+                    final hasNickname =
+                        rawNickname != null && rawNickname.isNotEmpty;
+                    final nickname = hasNickname ? rawNickname : '닉네임 미설정';
                     final isSelf = memberUid == uid;
                     final isMemberHost = i == 0;
                     final showKick = isHost && !isMemberHost;
                     return ListTile(
                       leading: CircleAvatar(
-                        child: Text(nickname.isNotEmpty ? nickname[0] : '?'),
+                        child: Text(hasNickname ? nickname[0] : '?'),
                       ),
                       title: Text(
                         '$nickname${isSelf ? ' (나)' : ''}',
@@ -234,6 +236,10 @@ class _WaitingView extends ConsumerWidget {
                           fontWeight: isSelf
                               ? FontWeight.bold
                               : FontWeight.normal,
+                          color: hasNickname ? null : Colors.grey,
+                          fontStyle: hasNickname
+                              ? FontStyle.normal
+                              : FontStyle.italic,
                         ),
                       ),
                       trailing: isMemberHost
@@ -290,7 +296,8 @@ class _WaitingView extends ConsumerWidget {
                   ),
                 ElevatedButton(
                   onPressed: group.memberUids.length >= 2 &&
-                          (group.memberNicknames[uid]?.isNotEmpty ?? false)
+                          group.memberUids.every((u) =>
+                              (group.memberNicknames[u]?.isNotEmpty ?? false))
                       ? () async {
                           try {
                             await ref
