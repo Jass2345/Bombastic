@@ -98,7 +98,7 @@ class _NicknameInputPageState extends ConsumerState<NicknameInputPage> {
                     onSubmitted: (_) => _submit(),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(
-                        RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9!@#_\-\.]'),
+                        RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9!@#_\-\. ]'),
                       ),
                     ],
                   ),
