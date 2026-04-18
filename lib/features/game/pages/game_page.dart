@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:bomb_pass/core/router/app_router.dart';
 import 'package:bomb_pass/core/services/audio_service.dart';
@@ -14,6 +15,7 @@ import 'package:bomb_pass/features/game/widgets/ending_credits_overlay.dart';
 import 'package:bomb_pass/features/group/controllers/group_controller.dart';
 import 'package:bomb_pass/features/mission/pages/mission_page.dart';
 import 'package:bomb_pass/features/shop/pages/shop_page.dart';
+import 'package:bomb_pass/widgets/floating_bomb_background.dart';
 import 'package:bomb_pass/widgets/group_currency_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -161,12 +163,24 @@ class _WaitingViewState extends ConsumerState<_WaitingView> {
           context.go(AppRoutes.home);
         }),
         title: Text(group.name),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const ColoredBox(color: Colors.transparent),
+          ),
+        ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: FloatingBombBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 참여 코드 — 탭하면 클립보드 복사 / 공유 아이콘으로 초대 링크 공유
               Card(
@@ -340,6 +354,7 @@ class _WaitingViewState extends ConsumerState<_WaitingView> {
                 ),
               ],
             ],
+            ),
           ),
         ),
       ),
@@ -567,20 +582,34 @@ class _PlayingTabViewState extends ConsumerState<_PlayingTabView> {
           ref.read(audioServiceProvider).stopTicking();
           context.go(AppRoutes.home);
         }),
-        title: Text('💣 $groupName'),
+        title: Text(groupName),
         actions: _buildGlobalActions(widget.groupId),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const ColoredBox(color: Colors.transparent),
+          ),
+        ),
       ),
-      body: IndexedStack(
-        index: _tabIndex,
-        children: [
-          ShopBody(groupId: widget.groupId),
-          MissionBody(groupId: widget.groupId),
-          HomeTab(groupId: widget.groupId),
-          LogTab(groupId: widget.groupId),
-          SettingsTab(groupId: widget.groupId),
-        ],
+      body: FloatingBombBackground(
+        child: IndexedStack(
+          index: _tabIndex,
+          children: [
+            ShopBody(groupId: widget.groupId),
+            MissionBody(groupId: widget.groupId),
+            HomeTab(groupId: widget.groupId),
+            LogTab(groupId: widget.groupId),
+            SettingsTab(groupId: widget.groupId),
+          ],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
+        height: 60,
         selectedIndex: _tabIndex,
         onDestinationSelected: (i) => setState(() => _tabIndex = i),
         destinations: _tabs,
@@ -654,16 +683,30 @@ class _FinishedTabViewState extends ConsumerState<_FinishedTabView> {
         }),
         title: Text('🏆 ${widget.group.name}'),
         actions: _buildGlobalActions(widget.group.id),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const ColoredBox(color: Colors.transparent),
+          ),
+        ),
       ),
-      body: IndexedStack(
-        index: _tabIndex,
-        children: [
-          _FinishedHomeTab(group: widget.group),
-          LogTab(groupId: widget.group.id),
-          SettingsTab(groupId: widget.group.id),
-        ],
+      body: FloatingBombBackground(
+        child: IndexedStack(
+          index: _tabIndex,
+          children: [
+            _FinishedHomeTab(group: widget.group),
+            LogTab(groupId: widget.group.id),
+            SettingsTab(groupId: widget.group.id),
+          ],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
+        height: 60,
         selectedIndex: _tabIndex,
         onDestinationSelected: (i) => setState(() => _tabIndex = i),
         destinations: _tabs,

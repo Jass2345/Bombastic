@@ -81,6 +81,9 @@ class _GroupCreatePageState extends ConsumerState<GroupCreatePage> {
 
               // 생성 버튼
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                ),
                 onPressed: state.isLoading
                     ? null
                     : () async {

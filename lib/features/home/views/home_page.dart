@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +9,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../data/firebase/firebase_providers.dart';
 import '../../../data/models/group_model.dart';
+import '../../../widgets/floating_bomb_background.dart';
 import '../controllers/home_controller.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -34,37 +38,68 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('💣 Bombastic'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: const ColoredBox(color: Colors.transparent),
+          ),
+        ),
       ),
-      body: groupsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
-        data: (groups) => groups.isEmpty
-            ? const _EmptyGroupView()
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: groups.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) =>
-                    _GroupCard(group: groups[i], myUid: uid),
+      body: FloatingBombBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: groupsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('오류: $e')),
+              data: (groups) => groups.isEmpty
+                  ? const _EmptyGroupView()
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: groups.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) =>
+                          _GroupCard(group: groups[i], myUid: uid),
+                    ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push(AppRoutes.groupJoin),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(0, 52),
+                      ),
+                      icon: const Icon(Icons.login),
+                      label: const Text('그룹 참여하기'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push(AppRoutes.groupCreate),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(0, 52),
+                      ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('그룹 만들기'),
+                    ),
+                  ),
+                ],
               ),
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'join',
-            onPressed: () => context.push(AppRoutes.groupJoin),
-            icon: const Icon(Icons.login),
-            label: const Text('참여'),
+            ),
           ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'create',
-            onPressed: () => context.push(AppRoutes.groupCreate),
-            icon: const Icon(Icons.add),
-            label: const Text('그룹 만들기'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

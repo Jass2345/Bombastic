@@ -36,11 +36,11 @@ class _MissionBodyState extends ConsumerState<MissionBody> {
         checkInState.isLoading || alreadyCheckedIn || serverTodayKey == null;
     final buttonStyle = ElevatedButton.styleFrom(
       backgroundColor:
-          alreadyCheckedIn ? const Color(0xFF2E7D32) : const Color(0xFFFFC94A),
+          alreadyCheckedIn ? const Color(0xFF66BB6A) : const Color(0xFFFFF3CD),
       foregroundColor:
           alreadyCheckedIn ? Colors.white : const Color(0xFF4E342E),
       disabledBackgroundColor:
-          alreadyCheckedIn ? const Color(0xFF2E7D32) : const Color(0xFFFFECB3),
+          alreadyCheckedIn ? const Color(0xFF66BB6A) : const Color(0xFFFFF8E1),
       disabledForegroundColor:
           alreadyCheckedIn ? Colors.white : const Color(0xFF8D6E63),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -84,7 +84,7 @@ class _MissionBodyState extends ConsumerState<MissionBody> {
                             setState(() => _justCheckedIn = true);
                             ref.read(audioServiceProvider).playSfx('MoneyCollectingSound1.mp3');
                             message =
-                                '출석 완료! +${CurrencyConstants.dailyCheckInReward}💰';
+                                '출석 완료! +${CurrencyConstants.dailyCheckInReward}';
                           } else {
                             setState(() => _justCheckedIn = true);
                             message = '오늘은 이미 출석했습니다.';
@@ -153,7 +153,18 @@ class _MissionBodyState extends ConsumerState<MissionBody> {
                     ),
                     title: Text(mission.title),
                     subtitle: Text(mission.description),
-                    trailing: Text('💰 ${mission.reward}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CurrencyIcon(size: 18),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${mission.reward}',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

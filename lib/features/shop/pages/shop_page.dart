@@ -2,6 +2,7 @@ import 'package:bomb_pass/core/constants/app_constants.dart';
 import 'package:bomb_pass/data/firebase/firebase_providers.dart';
 import 'package:bomb_pass/data/models/shop_item_model.dart';
 import 'package:bomb_pass/features/shop/controllers/shop_controller.dart';
+import 'package:bomb_pass/widgets/currency_icon.dart';
 import 'package:bomb_pass/widgets/item_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,17 +59,28 @@ class ShopBody extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: ownedInventory
-                        .map(
-                          (inventoryItem) => _InventoryChip(
-                            item: inventoryItem.item,
-                            count: inventoryItem.count,
-                          ),
-                        )
-                        .toList(),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final n = ownedInventory.length;
+                      final totalGaps = (n - 1) * 8.0;
+                      final cardWidth =
+                          ((constraints.maxWidth - totalGaps) / n).clamp(0.0, 82.0);
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (int i = 0; i < n; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            SizedBox(
+                              width: cardWidth,
+                              child: _InventoryCard(
+                                item: ownedInventory[i].item,
+                                count: ownedInventory[i].count,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 32),
@@ -142,9 +154,16 @@ class _RandomBoxCard extends ConsumerWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.casino),
-                label: const Text(
-                  '뽑기! 💰 ${CurrencyConstants.randomBoxPrice}',
-                  style: TextStyle(fontSize: 16),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('뽑기! ', style: TextStyle(fontSize: 16)),
+                    const CurrencyIcon(size: 16),
+                    const Text(
+                      '${CurrencyConstants.randomBoxPrice} 소모',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -335,6 +354,121 @@ class _InventoryChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InventoryCard extends StatelessWidget {
+  const _InventoryCard({required this.item, required this.count});
+
+  final ShopItemModel item;
+  final int count;
+
+  void _showDescription(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            ItemIcon(itemType: item.id, size: 36),
+            const SizedBox(width: 12),
+            Expanded(child: Text(item.name)),
+          ],
+        ),
+        content: Text(item.description),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('확인'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = Colors.grey.shade300;
+    final backgroundColor =
+        Theme.of(context).colorScheme.surfaceContainerHighest;
+
+    return GestureDetector(
+      onTap: () => _showDescription(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 정사각형 아이콘 영역
+            AspectRatio(
+              aspectRatio: 1.0,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final iconSize = constraints.maxWidth - 12;
+                  return Stack(
+                    children: [
+                      Container(color: backgroundColor),
+                      Center(child: ItemIcon(itemType: item.id, size: iconSize)),
+                      Positioned(
+                        top: 5,
+                        right: 5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'x$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            // 이름 영역
+            Container(
+              height: 22,
+              width: double.infinity,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                border: Border(top: BorderSide(color: borderColor)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                item.name,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

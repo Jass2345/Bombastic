@@ -35,6 +35,9 @@ dependencies:
   # 카카오링크
   kakao_flutter_sdk_share: ^1.9.0
 
+  # 폰트
+  google_fonts: ^6.2.1
+
   # UI 유틸
   intl: ^0.19.0
   gap: ^3.0.1
@@ -74,6 +77,7 @@ flutter:
 
   assets:
     - assets/sounds/
+    - assets/image/
 
 flutter_native_splash:
   color: "#FF3B30"           # 폭탄 레드 (라이트 모드)
@@ -87,7 +91,7 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/icon/Icon.png"
   adaptive_icon_background: "#FF5722"
-  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_foreground: "assets/icon/Icon.png"
   remove_alpha_ios: true

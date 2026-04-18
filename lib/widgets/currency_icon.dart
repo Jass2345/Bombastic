@@ -7,9 +7,10 @@ class CurrencyIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '💰',
-      style: TextStyle(fontSize: size, height: 1),
+    return Icon(
+      Icons.monetization_on_rounded,
+      size: size,
+      color: const Color(0xFFFFC107),
     );
   }
 }
