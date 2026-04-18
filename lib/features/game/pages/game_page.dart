@@ -296,35 +296,53 @@ class _WaitingView extends ConsumerWidget {
                       child: const Text('방 폐쇄'),
                     ),
                   ),
-                ElevatedButton(
-                  onPressed: group.memberUids.length >= 2 &&
-                          group.memberUids.every((u) {
-                            final n = group.memberNicknames[u];
-                            // 레거시 데이터 호환: '익명'은 닉네임 미설정으로 취급
-                            return n != null && n.isNotEmpty && n != '익명';
-                          })
-                      ? () async {
-                          try {
-                            await ref
-                                .read(gameControllerProvider.notifier)
-                                .startGame(groupId: group.id);
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('게임 시작 실패: $e')),
-                              );
+                Builder(
+                  builder: (context) {
+                    final allNicknamesSet = group.memberUids.every((u) {
+                      final n = group.memberNicknames[u];
+                      // 레거시 데이터 호환: '익명'은 닉네임 미설정으로 취급
+                      return n != null && n.isNotEmpty && n != '익명';
+                    });
+                    final canStart =
+                        group.memberUids.length >= 2 && allNicknamesSet;
+                    final label = !allNicknamesSet
+                        ? '닉네임 설정 대기 중'
+                        : group.memberUids.length < 2
+                            ? '참여자 대기 중'
+                            : '게임 시작';
+                    return ElevatedButton(
+                      onPressed: canStart
+                          ? () async {
+                              try {
+                                await ref
+                                    .read(gameControllerProvider.notifier)
+                                    .startGame(groupId: group.id);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('게임 시작 실패: $e')),
+                                  );
+                                }
+                              }
                             }
-                          }
-                        }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text('게임 시작',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        // 비활성 상태는 회색 톤으로 명확히 구분
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        disabledForegroundColor: Colors.grey.shade600,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ],
