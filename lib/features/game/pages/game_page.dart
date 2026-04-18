@@ -629,16 +629,14 @@ class _PlayingTabViewState extends ConsumerState<_PlayingTabView> {
         ),
       ),
       body: FloatingBombBackground(
-        child: IndexedStack(
-          index: _tabIndex,
-          children: [
-            ShopBody(groupId: widget.groupId),
-            MissionBody(groupId: widget.groupId),
-            HomeTab(groupId: widget.groupId),
-            LogTab(groupId: widget.groupId),
-            SettingsTab(groupId: widget.groupId),
-          ],
-        ),
+        child: switch (_tabIndex) {
+          0 => ShopBody(groupId: widget.groupId),
+          1 => MissionBody(groupId: widget.groupId),
+          2 => HomeTab(groupId: widget.groupId),
+          3 => LogTab(groupId: widget.groupId),
+          4 => SettingsTab(groupId: widget.groupId),
+          _ => HomeTab(groupId: widget.groupId),
+        },
       ),
       bottomNavigationBar: NavigationBar(
         height: 60,
@@ -728,14 +726,12 @@ class _FinishedTabViewState extends ConsumerState<_FinishedTabView> {
         ),
       ),
       body: FloatingBombBackground(
-        child: IndexedStack(
-          index: _tabIndex,
-          children: [
-            _FinishedHomeTab(group: widget.group),
-            LogTab(groupId: widget.group.id),
-            SettingsTab(groupId: widget.group.id),
-          ],
-        ),
+        child: switch (_tabIndex) {
+          0 => _FinishedHomeTab(group: widget.group),
+          1 => LogTab(groupId: widget.group.id),
+          2 => SettingsTab(groupId: widget.group.id),
+          _ => _FinishedHomeTab(group: widget.group),
+        },
       ),
       bottomNavigationBar: NavigationBar(
         height: 60,
