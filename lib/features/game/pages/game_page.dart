@@ -43,7 +43,6 @@ class _GamePageState extends ConsumerState<GamePage>
   bool _readyForFinished = false;
   bool _explosionShownChecked = false;
   bool _explosionAlreadyShown = false;
-  bool _isLateExplosion = false;
   GroupModel? _finishedGroup;
 
   @override
@@ -75,10 +74,7 @@ class _GamePageState extends ConsumerState<GamePage>
       audioSvc.playSfx('ExplosionSound1.mp3');
       audioSvc.stopTicking();
       audioSvc.stopBgm();
-      setState(() {
-        _explosionTriggered = true;
-        _isLateExplosion = true;
-      });
+      setState(() => _explosionTriggered = true);
       _explosionController.forward();
     }
   }
@@ -170,11 +166,7 @@ class _GamePageState extends ConsumerState<GamePage>
         if (_explosionTriggered && !_readyForFinished) {
           return Stack(
             children: [
-              if (!_isLateExplosion)
-                _PlayingTabView(groupId: widget.groupId)
-              else
-                const Scaffold(
-                    backgroundColor: Colors.black, body: SizedBox()),
+              const Scaffold(backgroundColor: Colors.black, body: SizedBox()),
               _ExplosionOverlay(controller: _explosionController),
             ],
           );
