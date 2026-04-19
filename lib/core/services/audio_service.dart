@@ -14,13 +14,34 @@ class AudioService {
 
   String? _currentBgmFile;
   double _currentBgmVolume = 0.05;
-  bool _bgmChanging = false; // 동시 playBgm 호출 방지용
+  bool _bgmChanging = false;
+  bool _bgmPaused = false; // pauseAll로 의도적으로 정지된 경우
 
   AudioService() {
     _bgmPlayer.setReleaseMode(ReleaseMode.loop);
     _tickingPlayer.setReleaseMode(ReleaseMode.loop);
     _bgmPlayer.setVolume(0.05);
     _tickingPlayer.setVolume(0.05);
+
+    // BGM이 예기치 않게 멈추면 자동 재시작
+    _bgmPlayer.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.stopped &&
+          _currentBgmFile != null &&
+          !_bgmChanging &&
+          !_bgmPaused) {
+        _restartBgm();
+      }
+    });
+  }
+
+  Future<void> _restartBgm() async {
+    if (_currentBgmFile == null || _bgmChanging || _bgmPaused) return;
+    try {
+      await _bgmPlayer.setVolume(_currentBgmVolume);
+      await _bgmPlayer.play(AssetSource('sounds/$_currentBgmFile'));
+    } catch (e) {
+      debugPrint('_restartBgm Error: $e');
+    }
   }
 
   Future<void> dispose() async {
@@ -34,8 +55,7 @@ class AudioService {
       final player = AudioPlayer();
       await player.setVolume(0.05);
       await player.play(AssetSource('sounds/$fileName'));
-      
-      // 재생 완료 시 플레이어 자원 해제
+
       player.onPlayerComplete.listen((_) {
         player.dispose();
       });
@@ -46,15 +66,14 @@ class AudioService {
 
   /// 반복되는 BGM 재생 (기본 5%)
   Future<void> playBgm(String fileName, {double volume = 0.05}) async {
-    // 이미 같은 파일이 재생 중이면 볼륨만 조정
     if (_bgmPlayer.state == PlayerState.playing && _currentBgmFile == fileName) {
       _currentBgmVolume = volume;
       await _bgmPlayer.setVolume(volume);
       return;
     }
-    // 진행 중인 변경 작업이 있으면 요청만 덮어쓰고 대기
     _currentBgmFile = fileName;
     _currentBgmVolume = volume;
+    _bgmPaused = false;
     if (_bgmChanging) return;
     _bgmChanging = true;
     try {
@@ -73,7 +92,7 @@ class AudioService {
   /// BGM이 멈춰있으면 마지막 파일로 재시작 (탭 전환 후 복구용)
   Future<void> ensureBgmPlaying() async {
     try {
-      if (_currentBgmFile == null) return;
+      if (_currentBgmFile == null || _bgmPaused) return;
       if (_bgmPlayer.state == PlayerState.playing) return;
       await _bgmPlayer.setVolume(_currentBgmVolume);
       await _bgmPlayer.play(AssetSource('sounds/$_currentBgmFile'));
@@ -85,6 +104,7 @@ class AudioService {
   /// 현재 재생중인 BGM의 볼륨만 조절 (음소거/복구용)
   Future<void> changeBgmVolume(double volume) async {
     try {
+      _currentBgmVolume = volume;
       await _bgmPlayer.setVolume(volume);
     } catch (e) {
       debugPrint('changeBgmVolume Error: $e');
@@ -95,6 +115,7 @@ class AudioService {
     try {
       _currentBgmFile = null;
       _bgmChanging = false;
+      _bgmPaused = false;
       await _bgmPlayer.stop();
     } catch (e) {
       debugPrint('stopBgm Error: $e');
@@ -104,6 +125,7 @@ class AudioService {
   /// 모든 오디오 일시정지 (앱 백그라운드용)
   Future<void> pauseAll() async {
     try {
+      _bgmPaused = true;
       await _bgmPlayer.pause();
       await _tickingPlayer.pause();
     } catch (e) {
@@ -114,6 +136,7 @@ class AudioService {
   /// 모든 오디오 재개 (앱 포그라운드용)
   Future<void> resumeAll() async {
     try {
+      _bgmPaused = false;
       await _bgmPlayer.resume();
       await _tickingPlayer.resume();
     } catch (e) {
